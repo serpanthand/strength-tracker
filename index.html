@@ -6,307 +6,123 @@
     <title>Subject Strength Tracker</title>
     <style>
         /* Basic Reset & Body Styles */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-user-select: none; /* Disable text selection during drag */
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-        }
-
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        html, body {
-             height: 100%; /* Ensure body takes full height */
-             overflow: hidden; /* Prevent bouncing scroll on mobile */
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a2e);
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite;
-            padding: 15px;
-            color: #e0e0e0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        @keyframes gradientAnimation { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        html, body { height: 100%; overflow: hidden; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; justify-content: center; align-items: center; background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #1a1a2e); background-size: 400% 400%; animation: gradientAnimation 15s ease infinite; padding: 15px; color: #e0e0e0; }
 
         /* Tracker Container */
         #tracker-container {
-            width: 95%;
-            max-width: 750px; /* Slightly wider */
-            height: 85vh; /* Use viewport height */
-            max-height: 600px; /* Max height */
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
-            background: rgba(20, 20, 40, 0.75); /* Slightly less transparent */
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-            touch-action: pan-y;
-            cursor: grab;
-            display: flex;
-            flex-direction: column;
+            width: 95%; max-width: 750px; height: 85vh; max-height: 600px;
+            border-radius: 15px; overflow: hidden; position: relative; /* Needed for absolute positioning of trash */
+            background: rgba(20, 20, 40, 0.75); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+            touch-action: pan-y; cursor: grab; display: flex; flex-direction: column;
         }
         #tracker-container.grabbing { cursor: grabbing; }
 
         /* Header */
-        .tracker-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 18px 25px; /* More padding */
-            background: rgba(255, 255, 255, 0.08); /* Slightly lighter */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-            position: relative;
-            z-index: 10; /* Above body */
-            flex-shrink: 0;
-        }
-
-        .tracker-header h2 {
-            font-size: 1.5em;
-            font-weight: 600;
-            color: #ffffff;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.35);
-        }
-
-        .tracker-header button {
-            background: none;
-            border: none;
-            color: #e0e0e0;
-            font-size: 1.8em;
-            cursor: pointer;
-            padding: 5px 12px;
-            border-radius: 8px;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            z-index: 11;
-        }
-        .tracker-header button:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-        }
+        .tracker-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; background: rgba(255, 255, 255, 0.08); border-bottom: 1px solid rgba(255, 255, 255, 0.12); position: relative; z-index: 10; flex-shrink: 0; }
+        .tracker-header h2 { font-size: 1.5em; font-weight: 600; color: #ffffff; text-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+        .tracker-header button { background: none; border: none; color: #e0e0e0; font-size: 1.8em; cursor: pointer; padding: 5px 12px; border-radius: 8px; transition: background-color 0.3s ease, color 0.3s ease; z-index: 11; }
+        .tracker-header button:hover { background-color: rgba(255, 255, 255, 0.15); color: #ffffff; }
 
         /* Tracker Body */
-        .tracker-body {
-             opacity: 1;
-             transition: opacity 0.3s ease-in-out;
-             position: relative;
-             z-index: 1;
-             flex-grow: 1;
-             display: flex;
-             flex-direction: column;
-             overflow: hidden; /* Hide overflow, scrolling managed by topics-grid */
-        }
+        .tracker-body { opacity: 1; transition: opacity 0.3s ease-in-out; position: relative; z-index: 1; flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; }
         .tracker-body.fading { opacity: 0; }
 
-        /* Strength Level Headers */
-        .strength-headers {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            padding: 12px 15px;
-            background-color: rgba(0, 0, 0, 0.2); /* Darker */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            flex-shrink: 0;
-        }
-
-        .strength-header {
-            text-align: center;
-            font-weight: 700; /* Bolder */
-            font-size: 0.95em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .strength-header.weakest { color: #ff8a8a; } /* Brighter Red */
-        .strength-header.weaker { color: #ffe082; } /* Brighter Yellow */
-        .strength-header.weak { color: #a5d6a7; } /* Brighter Green */
+        /* Strength Headers */
+        .strength-headers { display: grid; grid-template-columns: repeat(3, 1fr); padding: 12px 15px; background-color: rgba(0, 0, 0, 0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0; }
+        .strength-header { text-align: center; font-weight: 700; font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.5px; }
+        .strength-header.weakest { color: #ff8a8a; } .strength-header.weaker { color: #ffe082; } .strength-header.weak { color: #a5d6a7; }
 
         /* Topics Grid Area */
-        .topics-grid-area {
-            flex-grow: 1;
-            overflow-y: auto; /* Enable vertical scroll ONLY for the topic area */
-            padding: 15px;
-             /* Subtle scrollbar */
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.2) transparent;
-        }
-         /* Webkit scrollbar */
-        .topics-grid-area::-webkit-scrollbar { width: 8px; }
-        .topics-grid-area::-webkit-scrollbar-track { background: transparent; }
-        .topics-grid-area::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+        .topics-grid-area { flex-grow: 1; overflow-y: auto; padding: 15px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.2) transparent; }
+        .topics-grid-area::-webkit-scrollbar { width: 8px; } .topics-grid-area::-webkit-scrollbar-track { background: transparent; } .topics-grid-area::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+        .topics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; align-content: flex-start; min-height: 100%; }
 
+        /* Topic Columns */
+        .strength-column { display: flex; flex-direction: column; gap: 10px; min-height: 150px; padding: 10px; border-radius: 8px; background-color: rgba(255, 255, 255, 0.03); transition: background-color 0.3s ease, border 0.3s ease; }
+        .strength-column.drag-over { background-color: rgba(255, 255, 255, 0.1); border: 1px dashed rgba(255, 255, 255, 0.4); }
 
-        .topics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            align-content: flex-start;
-             min-height: 100%; /* Ensure grid tries to fill scroll area */
-        }
+        /* Topic Item */
+        .topic { display: flex; justify-content: space-between; align-items: center; text-align: left; min-height: 48px; padding: 10px 12px; font-size: 0.9em; font-weight: 500; cursor: grab; background-color: rgba(255, 255, 255, 0.08); border-radius: 6px; color: #d5d5d5; transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease; word-wrap: break-word; overflow-wrap: break-word; border-left: 4px solid transparent; position: relative; }
+        .topic span { flex-grow: 1; padding-right: 5px; }
+        .topic:hover { background-color: rgba(255, 255, 255, 0.18); transform: translateY(-1px); box-shadow: 0 5px 18px rgba(0, 0, 0, 0.3); z-index: 5; }
+        .topic.dragging { opacity: 0.5; transform: scale(0.95); background-color: rgba(0,0,0, 0.3); box-shadow: none; cursor: grabbing; }
+        .strength-column.weakest .topic { border-left-color: #ff8a8a; } .strength-column.weaker .topic { border-left-color: #ffe082; } .strength-column.weak .topic { border-left-color: #a5d6a7; }
 
-        /* Column for Topics */
-        .strength-column {
-            display: flex;
-            flex-direction: column;
-            gap: 10px; /* Gap between topics */
-            min-height: 150px;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: rgba(255, 255, 255, 0.03); /* Very subtle column background */
-            transition: background-color 0.3s ease;
-        }
-        /* Drag Over Highlight */
-        .strength-column.drag-over {
-             background-color: rgba(255, 255, 255, 0.1);
-             border: 1px dashed rgba(255, 255, 255, 0.4);
-        }
+        /* Topic Edit Styles */
+        .topic.editing .topic-text { display: none; } .topic.editing .topic-edit-input { display: block; }
+        .topic-edit-input { display: none; width: 100%; padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.3); background-color: rgba(0, 0, 0, 0.4); color: #e0e0e0; font-family: inherit; font-size: 0.9em; outline: none; }
+        .topic-edit-input:focus { border-color: #a5d6a7; box-shadow: 0 0 8px rgba(165, 214, 167, 0.3); }
 
-        /* Individual Topic Cell */
-        .topic {
-            display: flex; /* Use flex for better control */
-            justify-content: space-between; /* Space for potential edit/delete icons */
-            align-items: center;
-            text-align: left; /* Align text left */
-            min-height: 48px;
-            padding: 10px 12px;
-            font-size: 0.9em;
-            font-weight: 500;
-            cursor: grab; /* Indicate draggable */
-            background-color: rgba(255, 255, 255, 0.08); /* Slightly lighter */
-            border-radius: 6px;
-            color: #d5d5d5;
-            transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            border-left: 4px solid transparent; /* Thicker border */
-            position: relative;
-        }
-         .topic span { /* Target the text span for editing */
-            flex-grow: 1;
-            padding-right: 5px; /* Space before potential icons */
-         }
+        /* Add Topic Button & Input */
+        .add-topic-btn { display: flex; align-items: center; justify-content: center; padding: 10px; margin-top: 5px; border-radius: 6px; background-color: rgba(255, 255, 255, 0.05); color: #a0a0a0; font-size: 0.85em; font-weight: 500; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease; border: 1px dashed rgba(255, 255, 255, 0.2); }
+        .add-topic-btn:hover { background-color: rgba(255, 255, 255, 0.1); color: #ffffff; border-style: solid; }
+        .add-topic-btn svg { width: 14px; height: 14px; margin-right: 6px; fill: currentColor; }
+        .topic-input-container { display: flex; gap: 5px; margin-top: 5px; }
+        .topic-input { flex-grow: 1; padding: 8px 10px; border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.3); background-color: rgba(0, 0, 0, 0.3); color: #e0e0e0; font-family: inherit; font-size: 0.9em; outline: none; }
+        .topic-input:focus { border-color: #a5d6a7; box-shadow: 0 0 8px rgba(165, 214, 167, 0.3); }
+        .topic-input-save-btn { padding: 8px 10px; background-color: #a5d6a7; color: #111; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: background-color 0.2s ease; }
+        .topic-input-save-btn:hover { background-color: #81c784; }
 
-
-        .topic:hover {
-             background-color: rgba(255, 255, 255, 0.18);
-             transform: translateY(-1px);
-             box-shadow: 0 5px 18px rgba(0, 0, 0, 0.3);
-             z-index: 5; /* Bring forward on hover */
-        }
-
-         /* Dragging Style */
-         .topic.dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-            background-color: rgba(0,0,0, 0.3);
-            box-shadow: none;
-            cursor: grabbing;
-         }
-
-
-        /* Style topics based on their column */
-        .strength-column.weakest .topic { border-left-color: #ff8a8a; }
-        .strength-column.weaker .topic { border-left-color: #ffe082; }
-        .strength-column.weak .topic { border-left-color: #a5d6a7; }
-
-        /* Add Topic Button */
-        .add-topic-btn {
-            display: flex;
+        /* --- Trash Can --- */
+        #trash-can {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 55px;
+            height: 55px;
+            background-color: rgba(255, 138, 138, 0.2); /* Faint red */
+            border-radius: 50%;
+            display: flex; /* Use flex to center icon */
             align-items: center;
             justify-content: center;
-            padding: 10px;
-            margin-top: 5px; /* Space above button */
-            border-radius: 6px;
-            background-color: rgba(255, 255, 255, 0.05);
-            color: #a0a0a0;
-            font-size: 0.85em;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease;
-            border: 1px dashed rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 138, 138, 0.4);
+            z-index: 20; /* Above topics */
+            cursor: default; /* Default cursor, interaction via drop */
+            opacity: 0; /* Hidden by default */
+            transform: scale(0.8) translateY(10px); /* Start scaled down and slightly offset */
+            transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease;
+            pointer-events: none; /* Ignore clicks when hidden */
         }
-        .add-topic-btn:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            border-style: solid;
+        /* Show trash can when dragging is active on container */
+        #tracker-container.dragging-active #trash-can {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            pointer-events: auto; /* Allow drops when visible */
         }
-        .add-topic-btn svg { /* Style for potential icon */
-            width: 14px; height: 14px; margin-right: 6px; fill: currentColor;
+        #trash-can svg {
+            width: 24px;
+            height: 24px;
+            fill: #ff8a8a; /* Red icon */
+            transition: fill 0.2s ease;
+        }
+        /* Trash can drag over state */
+        #trash-can.drag-over {
+            background-color: rgba(255, 82, 82, 0.5); /* Brighter red */
+            border-color: rgba(255, 82, 82, 0.8);
+            transform: scale(1.1); /* Scale up slightly */
+        }
+        #trash-can.drag-over svg {
+            fill: #ffffff; /* White icon when active */
         }
 
-        /* Input Field for Add/Edit */
-        .topic-input-container {
-            display: flex;
-            gap: 5px;
-            margin-top: 5px;
-        }
-        .topic-input {
-            flex-grow: 1;
-            padding: 8px 10px;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background-color: rgba(0, 0, 0, 0.3);
-            color: #e0e0e0;
-            font-family: inherit;
-            font-size: 0.9em;
-            outline: none;
-        }
-        .topic-input:focus {
-            border-color: #a5d6a7; /* Highlight on focus */
-            box-shadow: 0 0 8px rgba(165, 214, 167, 0.3);
-        }
-        .topic-input-save-btn {
-            padding: 8px 10px;
-            background-color: #a5d6a7;
-            color: #111;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85em;
-            font-weight: 600;
-             transition: background-color 0.2s ease;
-        }
-         .topic-input-save-btn:hover {
-              background-color: #81c784;
-         }
-
-         /* Editing State */
-        .topic.editing .topic-text { display: none; } /* Hide text span when editing */
-        .topic.editing .topic-edit-input { display: block; } /* Show input when editing */
-        .topic-edit-input { display: none; width: 100%; } /* Hide input initially */
-
-
-        /* Media Query */
+        /* Media Queries */
         @media (max-width: 600px) {
-            body { padding: 10px; }
-            #tracker-container { max-width: 98%; height: 90vh; max-height: none; }
-            .tracker-header { padding: 15px; }
-            .tracker-header h2 { font-size: 1.3em; }
-            .tracker-header button { font-size: 1.6em; padding: 4px 10px; }
-            .strength-headers { padding: 10px 10px; }
-            .strength-header { font-size: 0.85em; }
-            .topics-grid-area { padding: 10px; }
-            .topics-grid { gap: 10px; }
-            .strength-column { padding: 8px; gap: 8px; }
-            .topic { min-height: 45px; font-size: 0.85em; padding: 8px 10px; }
-            .add-topic-btn { font-size: 0.8em; padding: 8px;}
+            body { padding: 10px; } #tracker-container { max-width: 98%; height: 90vh; max-height: none; }
+            .tracker-header { padding: 15px; } .tracker-header h2 { font-size: 1.3em; } .tracker-header button { font-size: 1.6em; padding: 4px 10px; }
+            .strength-headers { padding: 10px 10px; } .strength-header { font-size: 0.85em; }
+            .topics-grid-area { padding: 10px; } .topics-grid { gap: 10px; } .strength-column { padding: 8px; gap: 8px; }
+            .topic { min-height: 45px; font-size: 0.85em; padding: 8px 10px; } .add-topic-btn { font-size: 0.8em; padding: 8px;}
+            #trash-can { width: 48px; height: 48px; bottom: 15px; left: 15px; } #trash-can svg { width: 20px; height: 20px; }
         }
-         @media (max-width: 450px) {
-              .tracker-header h2 { font-size: 1.2em; }
-              .topic { font-size: 0.8em; min-height: 42px; padding: 7px 8px; }
-              .strength-header { font-size: 0.75em; }
-              .topics-grid { gap: 8px; }
-              .strength-column { padding: 5px; gap: 6px; }
-         }
+        @media (max-width: 450px) {
+            .tracker-header h2 { font-size: 1.2em; } .topic { font-size: 0.8em; min-height: 42px; padding: 7px 8px; }
+            .strength-header { font-size: 0.75em; } .topics-grid { gap: 8px; } .strength-column { padding: 5px; gap: 6px; }
+            #trash-can { width: 45px; height: 45px; bottom: 10px; left: 10px; } #trash-can svg { width: 18px; height: 18px; }
+        }
 
     </style>
 </head>
@@ -324,16 +140,22 @@
                 <div class="strength-header weaker">Weaker</div>
                 <div class="strength-header weak">Weak</div>
             </div>
-            <!-- Scrollable area for topics -->
             <div class="topics-grid-area">
                 <div class="topics-grid" id="topics-grid">
-                    <!-- Columns will be populated by JS -->
                     <div class="strength-column weakest" id="weakest-column" data-strength="Weakest"></div>
                     <div class="strength-column weaker" id="weaker-column" data-strength="Weaker"></div>
                     <div class="strength-column weak" id="weak-column" data-strength="Weak"></div>
                 </div>
             </div>
         </div>
+
+        <!-- Trash Can Element (Outside body, inside container) -->
+        <div id="trash-can">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
+        </div>
+
     </div>
 
     <script>
@@ -344,496 +166,337 @@
         const topicsGridElement = document.getElementById('topics-grid');
         const prevButton = document.getElementById('prev-subject');
         const nextButton = document.getElementById('next-subject');
+        const trashCan = document.getElementById('trash-can'); // Get Trash Can element
 
-        // Config & Data
+        // Config & Data (Keep as before)
         const FADE_DURATION = 300;
         const SWIPE_THRESHOLD = 50;
-        const strengthLevels = { // Map strength names to column IDs and vice-versa
-             Weakest: 'weakest-column',
-             Weaker: 'weaker-column',
-             Weak: 'weak-column'
-         };
-         const columnIdToStrength = {
-             'weakest-column': 'Weakest',
-             'weaker-column': 'Weaker',
-             'weak-column': 'Weak',
-         }
+        const strengthLevels = { Weakest: 'weakest-column', Weaker: 'weaker-column', Weak: 'weak-column' };
+        const columnIdToStrength = { 'weakest-column': 'Weakest', 'weaker-column': 'Weaker', 'weak-column': 'Weak' };
 
-        // --- SUBJECT DATA --- (Updated with provided lists)
-        let subjectData = { // Use let as we will modify it
-            "Physics": [
-                { name: "Rotation", strength: "Weakest" },
-                { name: "Fluid", strength: "Weakest" },
-                { name: "SHM", strength: "Weaker" },
-                { name: "COM", strength: "Weak" },
-                // Add other physics topics if needed
-            ],
-            "Chemistry": [
-                 // Weakest
-                 { name: "Salt Analysis", strength: "Weakest" },
-                 { name: "P-Block", strength: "Weakest" },
-                 { name: "Hydrogen", strength: "Weakest" },
-                 // Weaker
-                 { name: "Metallurgy", strength: "Weaker" },
-                 { name: "Coordination", strength: "Weaker" },
-                 { name: "Carbonyl", strength: "Weaker" },
-                 { name: "Carboxylic", strength: "Weaker" },
-                 { name: "Thermo II", strength: "Weaker" }, // Assuming thermo2
-                 // Weak
-                 { name: "Chemical Bonding", strength: "Weak" },
-                 { name: "Polymer", strength: "Weak" },
-                 { name: "GOC", strength: "Weak" }, // General Organic Chemistry
-                 { name: "Real Gas", strength: "Weak" },
-             ],
-             "Math": [
-                // Weakest
-                 { name: "Complex Numbers", strength: "Weakest" },
-                 { name: "Probability", strength: "Weakest" },
-                 { name: "Permutation & Comb.", strength: "Weakest" }, // PnC
-                 // Weaker
-                 { name: "Trigonometric Eqn", strength: "Weaker" },
-                 { name: "Hyperbola", strength: "Weaker" },
-                 // Weak
-                 { name: "Binomial Theorem", strength: "Weak" },
-             ]
-        };
+        // SUBJECT DATA (Keep as before)
+        let subjectData = {
+             "Physics": [ { name: "Rotation", strength: "Weakest" }, { name: "Fluid", strength: "Weakest" }, { name: "SHM", strength: "Weaker" }, { name: "COM", strength: "Weak" }, ],
+             "Chemistry": [ { name: "Salt Analysis", strength: "Weakest" }, { name: "P-Block", strength: "Weakest" }, { name: "Hydrogen", strength: "Weakest" }, { name: "Metallurgy", strength: "Weaker" }, { name: "Coordination", strength: "Weaker" }, { name: "Carbonyl", strength: "Weaker" }, { name: "Carboxylic", strength: "Weaker" }, { name: "Thermo II", strength: "Weaker" }, { name: "Chemical Bonding", strength: "Weak" }, { name: "Polymer", strength: "Weak" }, { name: "GOC", strength: "Weak" }, { name: "Real Gas", strength: "Weak" }, ],
+             "Math": [ { name: "Complex Numbers", strength: "Weakest" }, { name: "Probability", strength: "Weakest" }, { name: "Permutation & Comb.", strength: "Weakest" }, { name: "Trigonometric Eqn", strength: "Weaker" }, { name: "Hyperbola", strength: "Weaker" }, { name: "Binomial Theorem", strength: "Weak" }, ]
+         };
         const subjects = Object.keys(subjectData);
 
-        // State
+        // State (Keep as before)
         let currentSubjectIndex = 0;
         let isChangingSubject = false;
         let touchstartX = 0;
         let touchendX = 0;
         let isSwiping = false;
-        let draggedTopicElement = null; // Keep track of the element being dragged
+        let draggedTopicElement = null;
 
-        // --- Find Topic Index ---
-        // Helper to find the index of a topic object in the current subject's array
+        // --- Helper: Find Topic Index ---
         function findTopicIndex(topicName) {
-            const currentTopics = subjectData[subjects[currentSubjectIndex]] || [];
-            return currentTopics.findIndex(topic => topic.name === topicName);
+            const currentSubject = subjects[currentSubjectIndex];
+            if (!subjectData[currentSubject]) return -1; // Subject not found
+            return subjectData[currentSubject].findIndex(topic => topic.name === topicName);
         }
 
-        // --- Render Topics Grid ---
+        // --- Render Topics Grid (Keep as before) ---
         function renderTopics(subjectIndex) {
             const subjectName = subjects[subjectIndex];
             const topics = subjectData[subjectName] || [];
-
-            // Clear previous grid content (columns)
              Object.values(strengthLevels).forEach(columnId => {
-                const columnElement = document.getElementById(columnId);
-                 if(columnElement) columnElement.innerHTML = ''; // Clear topics
+                const col = document.getElementById(columnId);
+                if(col) col.innerHTML = '';
              });
-
-            // Update header
             subjectTitleElement.textContent = subjectName;
-
-            // Populate columns with topics
             topics.forEach(topic => {
                 const columnId = strengthLevels[topic.strength];
                 if (columnId) {
-                    const columnElement = document.getElementById(columnId);
-                    if (columnElement) {
-                        columnElement.appendChild(createTopicElement(topic));
-                    }
-                } else {
-                    console.warn(`Invalid strength level "${topic.strength}" for topic "${topic.name}" in ${subjectName}`);
+                    const col = document.getElementById(columnId);
+                    if(col) col.appendChild(createTopicElement(topic));
                 }
             });
-
-             // Add the "Add Topic" button to each column
              Object.entries(strengthLevels).forEach(([strength, columnId]) => {
-                 const columnElement = document.getElementById(columnId);
-                 if (columnElement) {
-                     columnElement.appendChild(createAddTopicButton(strength));
-                 }
+                 const col = document.getElementById(columnId);
+                 if (col) col.appendChild(createAddTopicButton(strength));
              });
         }
 
-        // --- Create Single Topic Element ---
+        // --- Create Topic Element (Keep as before) ---
         function createTopicElement(topic) {
             const topicElement = document.createElement('div');
             topicElement.classList.add('topic');
             topicElement.draggable = true;
-            topicElement.dataset.topicName = topic.name; // Store name for identification
-
-             // Use a span for the text to make editing easier
+            topicElement.dataset.topicName = topic.name;
             const textSpan = document.createElement('span');
             textSpan.classList.add('topic-text');
             textSpan.textContent = topic.name;
             topicElement.appendChild(textSpan);
-
-             // Add hidden input for editing (created on demand might be better, but this is simpler for now)
-             const editInput = document.createElement('input');
-             editInput.type = 'text';
-             editInput.classList.add('topic-edit-input'); // Initially hidden by CSS
-             editInput.value = topic.name;
-             topicElement.appendChild(editInput);
-
-            // Add event listeners for drag and edit
+            const editInput = document.createElement('input');
+            editInput.type = 'text';
+            editInput.classList.add('topic-edit-input');
+            editInput.value = topic.name;
+            topicElement.appendChild(editInput);
             topicElement.addEventListener('dragstart', handleDragStart);
             topicElement.addEventListener('dragend', handleDragEnd);
             topicElement.addEventListener('dblclick', handleDoubleClick);
-
             return topicElement;
         }
 
-        // --- Create "Add Topic" Button ---
+        // --- Create Add Topic Button (Keep as before) ---
         function createAddTopicButton(strength) {
-            const button = document.createElement('div');
-            button.classList.add('add-topic-btn');
-            button.innerHTML = `
-                <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg>
-                Add Topic
-            `;
-            button.dataset.strength = strength; // Store which strength this button belongs to
-            button.addEventListener('click', handleAddTopicClick);
-            return button;
-        }
+             const button = document.createElement('div');
+             button.classList.add('add-topic-btn');
+             button.innerHTML = `<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"></path></svg> Add Topic`;
+             button.dataset.strength = strength;
+             button.addEventListener('click', handleAddTopicClick);
+             return button;
+         }
 
-        // --- Handle Add Topic Click ---
-        function handleAddTopicClick(event) {
+        // --- Handle Add Topic Click (Keep as before) ---
+         function handleAddTopicClick(event) {
              const button = event.currentTarget;
              const column = button.parentElement;
              const strength = button.dataset.strength;
-
-             // Hide the button
              button.style.display = 'none';
-
-             // Create input container
              const inputContainer = document.createElement('div');
              inputContainer.classList.add('topic-input-container');
-
              const input = document.createElement('input');
-             input.type = 'text';
-             input.classList.add('topic-input');
-             input.placeholder = "New topic name...";
-
+             input.type = 'text'; input.classList.add('topic-input'); input.placeholder = "New topic name...";
              const saveBtn = document.createElement('button');
-             saveBtn.classList.add('topic-input-save-btn');
-             saveBtn.textContent = "Save";
+             saveBtn.classList.add('topic-input-save-btn'); saveBtn.textContent = "Save";
+             inputContainer.appendChild(input); inputContainer.appendChild(saveBtn);
+             column.appendChild(inputContainer); input.focus();
 
-             inputContainer.appendChild(input);
-             inputContainer.appendChild(saveBtn);
-             column.appendChild(inputContainer); // Add to column
-             input.focus();
-
-             // Save handler
              const saveNewTopic = () => {
                  const newName = input.value.trim();
                  if (newName) {
-                     // Add to data
                      const newTopic = { name: newName, strength: strength };
                      subjectData[subjects[currentSubjectIndex]].push(newTopic);
-
-                     // Add visually (append directly or re-render column/grid)
-                     // Re-rendering grid is simplest to maintain drag listeners etc.
-                     renderTopics(currentSubjectIndex);
-                     // Note: This removes the input field automatically
+                     renderTopics(currentSubjectIndex); // Re-render needed to ensure new item has listeners
                  } else {
-                      // Just remove input and show button again if input is empty
-                      column.removeChild(inputContainer);
-                      button.style.display = 'flex'; // Show button again
+                     column.removeChild(inputContainer);
+                     button.style.display = 'flex';
                  }
              };
-
-             // Input listeners
-             input.addEventListener('keydown', (e) => {
-                 if (e.key === 'Enter') {
-                     saveNewTopic();
-                 } else if (e.key === 'Escape') {
-                     column.removeChild(inputContainer);
-                     button.style.display = 'flex'; // Show button again
-                 }
-             });
+              const cancelAdd = () => {
+                  if(document.body.contains(inputContainer)) {
+                      column.removeChild(inputContainer);
+                      button.style.display = 'flex';
+                  }
+             }
+             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveNewTopic(); else if (e.key === 'Escape') cancelAdd(); });
              saveBtn.addEventListener('click', saveNewTopic);
+              input.addEventListener('blur', (e) => { setTimeout(() => { if (!inputContainer.contains(document.activeElement)) cancelAdd(); }, 100); });
+         }
 
-             // Optional: Click outside to cancel
-              input.addEventListener('blur', (e) => {
-                // Small delay to allow save button click to register
-                setTimeout(() => {
-                    // Check if the container is still part of the DOM
-                    if (document.body.contains(inputContainer) && !inputContainer.contains(document.activeElement)) {
-                        column.removeChild(inputContainer);
-                        button.style.display = 'flex';
-                    }
-                }, 100);
-             });
-        }
+        // --- Handle Topic Double Click (Edit) (Keep as before) ---
+          function handleDoubleClick(event) {
+             const topicElement = event.currentTarget;
+             if (topicElement.classList.contains('editing')) return;
+             topicElement.classList.add('editing');
+             const textSpan = topicElement.querySelector('.topic-text');
+             const input = topicElement.querySelector('.topic-edit-input');
+             const originalName = topicElement.dataset.topicName; // Use dataset consistently
+             input.value = originalName;
+             input.style.display = 'block'; textSpan.style.display = 'none';
+             input.focus(); input.select();
 
-
-        // --- Handle Topic Double Click (Edit) ---
-         function handleDoubleClick(event) {
-            const topicElement = event.currentTarget;
-            if (topicElement.classList.contains('editing')) return; // Already editing
-
-            topicElement.classList.add('editing');
-            const textSpan = topicElement.querySelector('.topic-text');
-            const input = topicElement.querySelector('.topic-edit-input');
-            const originalName = textSpan.textContent; // Or topicElement.dataset.topicName
-
-            input.value = originalName; // Ensure input has current value
-            input.style.display = 'block'; // Show input
-            textSpan.style.display = 'none'; // Hide text span
-            input.focus();
-            input.select(); // Select text for easy replacement
-
-             // Function to save changes
              const saveEdit = () => {
                  const newName = input.value.trim();
                  topicElement.classList.remove('editing');
-                 input.style.display = 'none';
-                 textSpan.style.display = 'inline'; // Or 'block' if needed
-
+                 input.style.display = 'none'; textSpan.style.display = 'inline';
                  if (newName && newName !== originalName) {
-                     // Update data
-                     const topicIndex = findTopicIndex(originalName); // Find by original name
+                     const topicIndex = findTopicIndex(originalName);
                      if (topicIndex !== -1) {
                          subjectData[subjects[currentSubjectIndex]][topicIndex].name = newName;
-                         // Update visual text and data attribute
                          textSpan.textContent = newName;
-                         topicElement.dataset.topicName = newName; // IMPORTANT: Update data-topic-name
-                     } else {
-                          console.error("Could not find topic to update:", originalName);
-                          textSpan.textContent = originalName; // Revert visual
-                     }
-                 } else {
-                      textSpan.textContent = originalName; // Revert visual if empty or unchanged
-                 }
-                 // Remove temporary listeners
+                         topicElement.dataset.topicName = newName; // Update dataset
+                     } else { textSpan.textContent = originalName; } // Revert if not found
+                 } else { textSpan.textContent = originalName; } // Revert if empty/unchanged
                  input.removeEventListener('blur', saveEdit);
                  input.removeEventListener('keydown', handleEditKeyDown);
              };
-
-             // Function to handle keydown (Enter/Escape)
-              const handleEditKeyDown = (e) => {
-                 if (e.key === 'Enter') {
-                     saveEdit();
-                 } else if (e.key === 'Escape') {
-                     input.value = originalName; // Revert input value
-                     saveEdit(); // Will just reset display as name hasn't changed
-                 }
-             };
-
-             // Add temporary listeners
+              const handleEditKeyDown = (e) => { if (e.key === 'Enter') saveEdit(); else if (e.key === 'Escape') { input.value = originalName; saveEdit(); } };
              input.addEventListener('blur', saveEdit);
              input.addEventListener('keydown', handleEditKeyDown);
-         }
-
+          }
 
         // --- Drag and Drop Handlers ---
         function handleDragStart(event) {
-            draggedTopicElement = event.target; // The topic div being dragged
+            // Ensure it's a topic element being dragged
+            if (!event.target.classList.contains('topic')) return;
+
+            draggedTopicElement = event.target;
             event.dataTransfer.setData('text/plain', event.target.dataset.topicName);
-            // Use setTimeout to allow the browser to render the drag image before applying style
+            event.dataTransfer.effectAllowed = 'move'; // Indicate moving is allowed
+
+            // Add class to container to show trash can
+            trackerContainer.classList.add('dragging-active');
+
             setTimeout(() => {
-                event.target.classList.add('dragging');
+                 if(draggedTopicElement) draggedTopicElement.classList.add('dragging');
             }, 0);
         }
 
         function handleDragEnd(event) {
+            // Remove container class to hide trash can
+             trackerContainer.classList.remove('dragging-active');
+
              if(draggedTopicElement) {
                 draggedTopicElement.classList.remove('dragging');
              }
-            // Clear visual cues from all columns
-            document.querySelectorAll('.strength-column').forEach(col => col.classList.remove('drag-over'));
+            // Clear visual cues from columns and trash can
+            document.querySelectorAll('.strength-column.drag-over').forEach(col => col.classList.remove('drag-over'));
+             trashCan.classList.remove('drag-over'); // Ensure trash cue is removed
             draggedTopicElement = null;
         }
 
+        // Column Drag Handlers (Keep as before)
         function handleDragOver(event) {
-            event.preventDefault(); // Necessary to allow dropping
-            const column = event.currentTarget;
-            // Add visual cue to the column being dragged over
-             column.classList.add('drag-over');
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            event.currentTarget.classList.add('drag-over');
         }
-
          function handleDragLeave(event) {
-            // Remove visual cue when dragging leaves the column
             event.currentTarget.classList.remove('drag-over');
          }
-
-
         function handleDrop(event) {
             event.preventDefault();
-            const columnElement = event.currentTarget; // The column where it was dropped
+            const columnElement = event.currentTarget;
             const targetStrength = columnIdToStrength[columnElement.id];
-             columnElement.classList.remove('drag-over'); // Clean up visual cue
+            columnElement.classList.remove('drag-over');
 
-             if (!draggedTopicElement || !targetStrength) {
-                 console.error("Drop failed: Missing dragged element or target strength.");
-                 return;
+            if (!draggedTopicElement || !targetStrength) return;
+            const topicName = event.dataTransfer.getData('text/plain');
+            if (!topicName) return; // Exit if no topic name retrieved
+
+             const originalColumn = draggedTopicElement.parentElement;
+
+             // Don't process if dropped in the same column and no strength change needed
+             // This check might be redundant if relying on data update logic, but can prevent unnecessary DOM ops
+             if (originalColumn === columnElement) {
+                  return; // Or just ensure data is consistent if needed
              }
 
-            const topicName = event.dataTransfer.getData('text/plain');
-            const originalColumn = draggedTopicElement.parentElement;
-
-            // Prevent dropping in the same column (optional)
-             // if (originalColumn === columnElement) {
-             //     return;
-             // }
-
-
-            // Find the topic in the data and update its strength
             const topicIndex = findTopicIndex(topicName);
             if (topicIndex !== -1) {
                 subjectData[subjects[currentSubjectIndex]][topicIndex].strength = targetStrength;
-
-                // --- Visual Update ---
-                // 1. Remove the original element
-                originalColumn.removeChild(draggedTopicElement);
-                // 2. Append the dragged element to the new column (before the 'Add' button if exists)
-                 const addBtn = columnElement.querySelector('.add-topic-btn');
+                const addBtn = columnElement.querySelector('.add-topic-btn');
                  if (addBtn) {
                      columnElement.insertBefore(draggedTopicElement, addBtn);
                  } else {
-                     columnElement.appendChild(draggedTopicElement); // Fallback if no add button
+                     columnElement.appendChild(draggedTopicElement);
                  }
-                // 3. Update the border color immediately (or rely on re-render)
-                // Re-rendering the whole grid is safer to ensure all listeners are correct,
-                // but appending directly can feel smoother. Let's stick with direct append for now.
-                 // Force style update for border: remove old, add new based on targetStrength
-                 draggedTopicElement.className = 'topic'; // Reset classes (except topic)
-                 draggedTopicElement.classList.add(targetStrength.toLowerCase()); // Assuming CSS uses lowercase for colors
-                 // Re-apply column-specific border in CSS or explicitly:
-                 draggedTopicElement.style.borderLeftColor = ''; // Clear inline style if any
-                 // Let CSS handle the border based on parent column class now it's moved.
-
+                 // CSS should handle the border color based on the new parent column class
+                 // We don't need explicit border style changes here if CSS is set up correctly
             } else {
-                console.error("Could not find topic data to update strength for:", topicName);
+                console.error("Could not find topic data to update strength:", topicName);
             }
-             draggedTopicElement = null; // Clear reference
+             // Note: draggedTopicElement is cleared in handleDragEnd
         }
 
-        // Add dragover/drop listeners to columns
+        // Add drag listeners to columns (Keep as before)
         document.querySelectorAll('.strength-column').forEach(column => {
             column.addEventListener('dragover', handleDragOver);
-             column.addEventListener('dragleave', handleDragLeave);
+            column.addEventListener('dragleave', handleDragLeave);
             column.addEventListener('drop', handleDrop);
         });
 
 
-        // --- Change Subject Logic (with Fade) ---
-        function changeSubject(direction) {
-            if (isChangingSubject) return;
-            isChangingSubject = true;
-            trackerBody.classList.add('fading');
+        // --- Trash Can Drag Handlers ---
+        function handleTrashDragOver(event) {
+            event.preventDefault(); // Allow drop
+            event.dataTransfer.dropEffect = 'move';
+            trashCan.classList.add('drag-over');
+        }
 
-            if (direction === 'next') {
-                currentSubjectIndex = (currentSubjectIndex + 1) % subjects.length;
-            } else if (direction === 'prev') {
-                currentSubjectIndex = (currentSubjectIndex - 1 + subjects.length) % subjects.length;
+        function handleTrashDragLeave(event) {
+            trashCan.classList.remove('drag-over');
+        }
+
+        function handleTrashDrop(event) {
+            event.preventDefault();
+            trashCan.classList.remove('drag-over'); // Remove visual cue
+
+            if (!draggedTopicElement) return; // Should have element from dragstart
+
+            const topicName = event.dataTransfer.getData('text/plain');
+            if (!topicName) {
+                 console.error("Trash drop: Could not get topic name.");
+                 return;
             }
 
+            const topicIndex = findTopicIndex(topicName);
+
+            if (topicIndex !== -1) {
+                // 1. Remove from data array
+                subjectData[subjects[currentSubjectIndex]].splice(topicIndex, 1);
+
+                // 2. Remove from DOM
+                draggedTopicElement.remove(); // Remove the element itself
+
+                console.log(`Topic "${topicName}" deleted.`);
+                // Optionally add a more user-friendly confirmation/undo later
+
+            } else {
+                console.error(`Trash drop: Could not find topic "${topicName}" in data.`);
+            }
+
+            // draggedTopicElement is cleared in handleDragEnd
+        }
+
+        // Add drag listeners to trash can
+        trashCan.addEventListener('dragover', handleTrashDragOver);
+        trashCan.addEventListener('dragleave', handleTrashDragLeave);
+        trashCan.addEventListener('drop', handleTrashDrop);
+
+
+        // --- Change Subject Logic (Keep as before) ---
+        function changeSubject(direction) {
+            if (isChangingSubject) return;
+            isChangingSubject = true; trackerBody.classList.add('fading');
+            if (direction === 'next') currentSubjectIndex = (currentSubjectIndex + 1) % subjects.length;
+            else currentSubjectIndex = (currentSubjectIndex - 1 + subjects.length) % subjects.length;
             setTimeout(() => {
                 renderTopics(currentSubjectIndex);
-                 requestAnimationFrame(() => {
-                    trackerBody.classList.remove('fading');
-                 });
-                setTimeout(() => {
-                    isChangingSubject = false;
-                }, FADE_DURATION);
+                 requestAnimationFrame(() => trackerBody.classList.remove('fading'));
+                setTimeout(() => isChangingSubject = false, FADE_DURATION);
             }, FADE_DURATION);
         }
 
-        // --- Swipe/Drag Detection for Subject Change ---
+        // --- Swipe/Drag Detection for Subject Change (Keep checks to prevent conflict) ---
         function handleGesture() {
             const distance = touchendX - touchstartX;
-            if (Math.abs(distance) > SWIPE_THRESHOLD) {
-                 if (distance < 0) { changeSubject('next'); }
-                 else { changeSubject('prev'); }
-             }
+            if (Math.abs(distance) > SWIPE_THRESHOLD) { if (distance < 0) changeSubject('next'); else changeSubject('prev'); }
         }
 
-        // Touch Events
+        // Touch Events (Keep checks)
         trackerContainer.addEventListener('touchstart', (event) => {
-            // Only initiate swipe if touch starts outside the scrollable topic area
-            if (isChangingSubject || event.target.closest('.topics-grid-area')) return;
-            touchstartX = event.changedTouches[0].screenX;
-            isSwiping = true;
-            // trackerContainer.classList.add('grabbing'); // Already handled by mouse down
+            if (isChangingSubject || event.target.closest('.topics-grid-area, .topic[draggable="true"], button, .add-topic-btn')) return;
+            touchstartX = event.changedTouches[0].screenX; isSwiping = true;
         }, { passive: true });
-
-        trackerContainer.addEventListener('touchmove', (event) => {
-             if (!isSwiping || isChangingSubject) return;
-             touchendX = event.changedTouches[0].screenX;
-        }, { passive: true });
-
+        trackerContainer.addEventListener('touchmove', (event) => { if (!isSwiping || isChangingSubject) return; touchendX = event.changedTouches[0].screenX; }, { passive: true });
         trackerContainer.addEventListener('touchend', (event) => {
-             // Check if the touchend happens within the scrollable area, abort swipe change
-             if (event.target.closest('.topics-grid-area')) {
-                  isSwiping = false;
-                  touchstartX = 0;
-                  touchendX = 0;
-                  // trackerContainer.classList.remove('grabbing'); // Let mouseup handle this
-                  return;
-             }
-            if (!isSwiping || isChangingSubject) {
-                 isSwiping = false;
-                 return;
-            }
-            isSwiping = false;
-            if (touchendX !== 0) { handleGesture(); }
+            if (event.target.closest('.topics-grid-area')) { isSwiping = false; touchstartX = 0; touchendX = 0; return; } // Prevent swipe if ended in scroll area
+            if (!isSwiping || isChangingSubject) { isSwiping = false; return; }
+            isSwiping = false; if (touchendX !== 0) handleGesture();
             touchstartX = 0; touchendX = 0;
         });
 
-        // Mouse Events for Drag/Swipe Simulation (Subject Change)
-         let isDragging = false;
-         let mouseStartX = 0;
-         let mouseEndX = 0;
-
+        // Mouse Events for Drag/Swipe Simulation (Keep checks)
+         let isDragging = false; let mouseStartX = 0; let mouseEndX = 0;
          trackerContainer.addEventListener('mousedown', (event) => {
-             // Prevent starting drag if:
-             // - Already changing subject
-             // - Not left click
-             // - Clicked on a button
-             // - Clicked inside the scrollable topic area (let browser handle scroll)
-             // - Clicked on a draggable topic itself (let drag&drop handle this)
-             if (isChangingSubject || event.button !== 0 ||
-                 event.target.closest('button, .add-topic-btn, .topic-input-container') ||
-                 event.target.closest('.topics-grid-area') ||
-                 event.target.closest('.topic[draggable="true"]')) {
-                return;
-             }
-             mouseStartX = event.screenX;
-             isDragging = true;
-             trackerContainer.classList.add('grabbing');
-             // Add listeners to window
-             window.addEventListener('mousemove', handleMouseMove);
-             window.addEventListener('mouseup', handleMouseUp);
+             if (isChangingSubject || event.button !== 0 || event.target.closest('button, .add-topic-btn, .topic-input-container, .topics-grid-area, .topic[draggable="true"]')) return;
+             mouseStartX = event.screenX; isDragging = true; trackerContainer.classList.add('grabbing');
+             window.addEventListener('mousemove', handleMouseMove); window.addEventListener('mouseup', handleMouseUp);
          });
-
-         function handleMouseMove(event) {
-             if (!isDragging || isChangingSubject) return;
-             mouseEndX = event.screenX;
-             event.preventDefault(); // Prevent text selection
-         }
-
+         function handleMouseMove(event) { if (!isDragging || isChangingSubject) return; mouseEndX = event.screenX; event.preventDefault(); }
          function handleMouseUp(event) {
-              if (!isDragging || event.button !== 0) {
-                   // Ensure cleanup even if not the initiating button release
-                   isDragging = false;
-                   trackerContainer.classList.remove('grabbing');
-                   window.removeEventListener('mousemove', handleMouseMove);
-                   window.removeEventListener('mouseup', handleMouseUp);
-                   return;
-             }
-             isDragging = false;
-             trackerContainer.classList.remove('grabbing');
-             window.removeEventListener('mousemove', handleMouseMove);
-             window.removeEventListener('mouseup', handleMouseUp);
-
-             if(mouseEndX !== 0){
-                const distance = mouseEndX - mouseStartX;
-                if (Math.abs(distance) > SWIPE_THRESHOLD) {
-                    if (distance < 0) { changeSubject('next'); }
-                    else { changeSubject('prev'); }
-                }
-             }
-             mouseStartX = 0; mouseEndX = 0;
+              if (!isDragging || event.button !== 0) { /* Clean up regardless */ isDragging = false; trackerContainer.classList.remove('grabbing'); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); return; }
+              isDragging = false; trackerContainer.classList.remove('grabbing'); window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp);
+              if(mouseEndX !== 0){ const distance = mouseEndX - mouseStartX; if (Math.abs(distance) > SWIPE_THRESHOLD) { if (distance < 0) changeSubject('next'); else changeSubject('prev'); } }
+              mouseStartX = 0; mouseEndX = 0;
          }
 
-
-        // --- Button Navigation ---
+        // --- Button Navigation (Keep as before) ---
         prevButton.addEventListener('click', () => changeSubject('prev'));
         nextButton.addEventListener('click', () => changeSubject('next'));
 
